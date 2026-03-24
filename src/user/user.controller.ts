@@ -17,7 +17,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('test')
-  test() {
+  test(): never[] {
+    // ระบุ type เป็น never[] ตามฝั่ง Service
     return this.userService.test();
   }
 
@@ -27,7 +28,10 @@ export class UserController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Query('fields') fields?: string) {
+  findOne(
+    @Param('id') id: string,
+    @Query('fields') fields?: string,
+  ): Partial<IUser> {
     const fieldArray = fields ? fields.split(',') : undefined;
     return this.userService.findOne(id, fieldArray);
   }

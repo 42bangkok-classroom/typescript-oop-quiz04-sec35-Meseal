@@ -8,17 +8,20 @@ import * as path from 'path';
 export class UserService {
   private readonly filePath = path.join(process.cwd(), 'data', 'users.json');
 
-  // Helper สำหรับอ่านไฟล์ JSON
   private readDatabase(): IUser[] {
     try {
       const rawData = fs.readFileSync(this.filePath, 'utf8');
-      return JSON.parse(rawData);
-    } catch (error) {
-      return []; // ถ้าไฟล์ไม่มีหรืออ่านไม่ได้ ให้คืนค่า Array ว่าง
+      // แปลงเป็น unknown ก่อน เพื่อป้องกัน Unsafe Assignment ของ ESLint
+      const parsedData = JSON.parse(rawData) as unknown;
+      return parsedData as IUser[];
+    } catch {
+      // ลบตัวแปร error ออก เพราะกฎไม่ให้มีตัวแปรที่ประกาศแล้วไม่ได้ใช้
+      return [];
     }
   }
 
-  test(): any[] {
+  // เปลี่ยนจาก any[] เป็น never[] (เพราะคืนค่า Array ว่างเสมอ)
+  test(): never[] {
     return [];
   }
 
@@ -38,21 +41,25 @@ export class UserService {
       return user;
     }
 
-    // กรองเอาเฉพาะ fields ที่ระบุ
-    return fields.reduce((obj, field) => {
-      if (user[field] !== undefined) {
-        obj[field] = user[field];
+    // เปลี่ยนจาก reduce มาใช้ for...of และ keyof เพื่อให้ Type Safe 100%
+    const result: Partial<IUser> = {};
+    for (const field of fields) {
+      const key = field as keyof IUser;
+      if (user[key] !== undefined) {
+        result[key] = user[key];
       }
-      return obj;
-    }, {});
+    }
+
+    return result;
   }
 
   create(dto: CreateUserDto): IUser {
     const users = this.readDatabase();
 
-    // Generate ID: หา ID สูงสุดแล้วบวก 1
     const lastId =
-      users.length > 0 ? Math.max(...users.map((u) => parseInt(u.id))) : 0;
+      users.length > 0
+        ? Math.max(...users.map((u) => parseInt(u.id, 10))) // ใส่ radix 10 ให้ parseInt
+        : 0;
     const newId = (lastId + 1).toString();
 
     const newUser: IUser = {
@@ -61,8 +68,6 @@ export class UserService {
     };
 
     users.push(newUser);
-
-    // บันทึกข้อมูลลงไฟล์
     fs.writeFileSync(this.filePath, JSON.stringify(users, null, 2), 'utf8');
 
     return newUser;
