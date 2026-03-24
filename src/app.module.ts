@@ -7,6 +7,6 @@ import { UserService } from './user/user.service';
 @Module({
   imports: [],
   controllers: [AppController, UserController], // เพิ่ม UserController
-  providers: [AppService, UserService],         // เพิ่ม UserService
+  providers: [AppService, UserService], // เพิ่ม UserService
 })
 export class AppModule {}

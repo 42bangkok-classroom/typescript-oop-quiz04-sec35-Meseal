@@ -51,9 +51,8 @@ export class UserService {
     const users = this.readDatabase();
 
     // Generate ID: หา ID สูงสุดแล้วบวก 1
-    const lastId = users.length > 0 
-      ? Math.max(...users.map(u => parseInt(u.id))) 
-      : 0;
+    const lastId =
+      users.length > 0 ? Math.max(...users.map((u) => parseInt(u.id))) : 0;
     const newId = (lastId + 1).toString();
 
     const newUser: IUser = {
